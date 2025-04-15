@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>STAGE - Student List</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>STAGE Student List</h1>
+
+    <table id="studentsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Class</th>
+                <th>Age</th>
+                <th>Gender</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchStudents() {
+            try {
+                const response = await fetch('/api/students');
+                const students = await response.json();
+
+                const tbody = document.querySelector('#studentsTable tbody');
+                tbody.innerHTML = ''; // clear any existing rows
+
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+            <td>${student.id}</td>
+            <td>${student.name}</td>
+            <td>${student.email}</td>
+            <td>${student.class}</td>
+            <td>${student.age}</td>
+            <td>${student.gender}</td>
+          `;
+                    tbody.appendChild(row);
+                });
+            } catch (err) {
+                console.error('Error fetching students:', err);
+            }
+        }
+
+        // Load data on page load
+        window.onload = fetchStudents;
+    </script>
+</body>
+
+</html>
