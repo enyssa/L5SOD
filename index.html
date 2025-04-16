@@ -1,85 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>STAGE - Student List</title>
-    <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        h1 {
-            color: #333;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>STAGE - Student CRUD</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    input, select { margin: 5px; padding: 5px; }
+    button { padding: 5px 10px; margin-right: 5px; }
+  </style>
 </head>
-
 <body>
-    <h1>STAGE Student List</h1>
+  <h1>STAGE Student Management</h1>
 
-    <table id="studentsTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Class</th>
-                <th>Age</th>
-                <th>Gender</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Rows will be inserted here -->
-        </tbody>
-    </table>
+  <form id="studentForm">
+    <input type="hidden" id="studentId">
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="class_name" placeholder="Class" required>
+    <input type="number" id="age" placeholder="Age" required>
+    <select id="gender" required>
+      <option value="">Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+    </select>
+    <button type="submit">Save</button>
+  </form>
 
-    <script>
-        async function fetchStudents() {
-            try {
-                const response = await fetch('/api/students');
-                const students = await response.json();
+  <table id="studentsTable">
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Email</th><th>Class</th><th>Age</th><th>Gender</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-                const tbody = document.querySelector('#studentsTable tbody');
-                tbody.innerHTML = ''; // clear any existing rows
+  <script>
+    const form = document.getElementById('studentForm');
+    const idField = document.getElementById('studentId');
 
-                students.forEach(student => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-            <td>${student.id}</td>
-            <td>${student.name}</td>
-            <td>${student.email}</td>
-            <td>${student.class}</td>
-            <td>${student.age}</td>
-            <td>${student.gender}</td>
-          `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error('Error fetching students:', err);
-            }
-        }
+    async function fetchStudents() {
+      const res = await fetch('/api/students');
+      const students = await res.json();
 
-        // Load data on page load
-        window.onload = fetchStudents;
-    </script>
+      const tbody = document.querySelector('#studentsTable tbody');
+      tbody.innerHTML = '';
+
+      students.forEach(s => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.email}</td>
+          <td>${s.class}</td>
+          <td>${s.age}</td>
+          <td>${s.gender}</td>
+          <td>
+            <button onclick="editStudent(${s.id}, '${s.name}', '${s.email}', '${s.class}', ${s.age}, '${s.gender}')">Edit</button>
+            <button onclick="deleteStudent(${s.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const student = {
+        name: form.name.value,
+        email: form.email.value,
+        class_name: form.class_name.value,
+        age: form.age.value,
+        gender: form.gender.value
+      };
+
+      if (idField.value) {
+        // Update
+        await fetch(`/api/students/${idField.value}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(student)
+        });
+      } else {
+        // Create
+        await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(student)
+        });
+      }
+
+      form.reset();
+      idField.value = '';
+      fetchStudents();
+    };
+
+    function editStudent(id, name, email, class_name, age, gender) {
+      idField.value = id;
+      form.name.value = name;
+      form.email.value = email;
+      form.class_name.value = class_name;
+      form.age.value = age;
+      form.gender.value = gender;
+    }
+
+    async function deleteStudent(id) {
+      if (confirm('Are you sure?')) {
+        await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        fetchStudents();
+      }
+    }
+
+    fetchStudents();
+  </script>
 </body>
-
 </html>
